@@ -1,7 +1,13 @@
 import dotenv from 'dotenv';
 import path from 'node:path';
 
-const environment = process.env.ENV ?? 'qa';
+const envArg = process.argv.find(arg => arg.startsWith('--env='));
+
+const environment = (
+    envArg?.split('=')[1] ??
+    process.env.ENV ??
+    'qa'
+).toLowerCase();
 
 const envFile = path.join(
     process.cwd(),
@@ -9,9 +15,11 @@ const envFile = path.join(
     `${environment}.env`
 );
 
-dotenv.config({
-    path: envFile
-});
+const result = dotenv.config({ path: envFile });
+
+if (result.error) {
+    throw new Error(`Unable to load environment file: ${envFile}`);
+}
 
 function getRequiredEnv(name: string): string {
     const value = process.env[name];
